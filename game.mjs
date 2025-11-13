@@ -25,7 +25,7 @@ const MENU = {
 // ------
 
 const ship = {
-  x: (scene.width * 0.5) - 50,
+  x: (scene.width * 0.5) - 25,
   y: scene.height - 30,
   width: 50,
   height: 20,
@@ -89,16 +89,7 @@ window.addEventListener("keyup", function (e) {
 //#region Game engine ----------------------------------------------------------------
 
 function init() {
-
-  let x = NPC.sx;
-  let y = NPC.sy;
-  for (let i = 0; i < npcPerRow; i++) {
-    NPC.enteties.push({ x, y, color: "#922783ff", active: true, width: NPC.width, height: NPC.height });
-    x += NPC.width + NPC.padding;
-  }
-
-  NPC.speed = 1;
-
+  drawNewGame();
   currentState = STATES.MENU;
   update();
 }
@@ -179,6 +170,23 @@ function drawMenu() {
   }
 }
 
+function drawNewGame(){
+  ship.x = (scene.width * 0.5) - 25;
+  ship.velocityX = 0;
+
+  NPC.enteties = [];
+
+  let x = NPC.sx;
+  let y = NPC.sy;
+  console.log(y);
+  for (let i = 0; i < npcPerRow; i++) {
+    NPC.enteties.push({ x, y, color: "#922783ff", active: true, width: NPC.width, height: NPC.height });
+    x += NPC.width + NPC.padding;
+  }
+
+  NPC.speed = 1;
+}
+
 function updateGame(dt) {
   updateShip();
   updateProjectiles();
@@ -252,6 +260,7 @@ function timeCounter(){
 
   if (secondsLeftOfTimer <= 0){
     currentState = STATES.MENU;
+    secondsLeftOfTimer = 5;
   }
 }
 
@@ -326,6 +335,7 @@ function drawGameState() {
 
 function startPlay() {
   currentState = STATES.PLAY;
+  drawNewGame();
 }
 
 function showHigScores() {
