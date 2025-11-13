@@ -10,6 +10,8 @@ const brush = getBrush();
 
 let currentState = STATES.IDLE;
 
+let secondsLeftOfTimer = 5;
+
 // ------
 
 const MENU = {
@@ -107,10 +109,16 @@ function update(time) {
     updateMenu(time);
   } else if (currentState === STATES.PLAY) {
     updateGame(time);
-  }
+  } 
 
   draw();
-  requestAnimationFrame(update)
+
+  if(currentState === STATES.GAMEOVER){
+    setTimeout(() => {requestAnimationFrame(update); timeCounter();}, 1000);
+  } else {
+    requestAnimationFrame(update);
+  }
+  
 }
 
 function draw() {
@@ -123,7 +131,6 @@ function draw() {
   } else if (currentState === STATES.GAMEOVER){
     drawGameOver();
   }
-
 }
 
 init(); // Starts the game
@@ -233,7 +240,21 @@ function drawGameOver(){
   brush.textAlign = "center";
   brush.font = "80px Times New Roman";
   brush.fillText("GAME OVER", scene.width/2, 200);
+
+  brush.font = "30px Times New Roman";
+  brush.fillText("Returning to main menu in: " + secondsLeftOfTimer + "s", scene.width/2, 240);
 }
+
+//function that counts the time
+function timeCounter(){
+  secondsLeftOfTimer --;
+  //console.log(secondsLeftOfTimer);
+
+  if (secondsLeftOfTimer <= 0){
+    currentState = STATES.MENU;
+  }
+}
+
 
 function isShot(target) {
 
