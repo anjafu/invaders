@@ -178,7 +178,7 @@ function drawNewGame(){
 
   let x = NPC.sx;
   let y = NPC.sy;
-  console.log(y);
+  console.log(x);
   for (let i = 0; i < npcPerRow; i++) {
     NPC.enteties.push({ x, y, color: "#922783ff", active: true, width: NPC.width, height: NPC.height });
     x += NPC.width + NPC.padding;
@@ -191,6 +191,11 @@ function updateGame(dt) {
   updateShip();
   updateProjectiles();
   updateInvaders();
+
+  if(checkInvaderStatus()){
+    drawNewGame();
+  }
+
   if (isGameOver()) {
     currentState = STATES.GAMEOVER;
   }
@@ -262,6 +267,16 @@ function timeCounter(){
     currentState = STATES.MENU;
     secondsLeftOfTimer = 5;
   }
+}
+
+function checkInvaderStatus(){
+  for (let invader of NPC.enteties) {
+    if (invader.active) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 
