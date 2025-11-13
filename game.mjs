@@ -120,6 +120,8 @@ function draw() {
     drawMenu();
   } else if (currentState === STATES.PLAY) {
     drawGameState();
+  } else if (currentState === STATES.GAMEOVER){
+    drawGameOver();
   }
 
 }
@@ -217,11 +219,20 @@ function updateInvaders() {
 function isGameOver() {
   for (let invader of NPC.enteties) {
     if (invader.active) {
-      return false;
+      if (invader.y+invader.height >= ship.y) {
+        return true;
+      }
     }
   }
 
-  return true;
+  return false;
+}
+
+function drawGameOver(){
+  brush.fillStyle = "white";
+  brush.textAlign = "center";
+  brush.font = "80px Times New Roman";
+  brush.fillText("GAME OVER", scene.width/2, 200);
 }
 
 function isShot(target) {
