@@ -176,9 +176,11 @@ function drawNewGame(){
 
   NPC.enteties = [];
 
+  movmentSteps = maxMovmentSteps;
+
   let x = NPC.sx;
   let y = NPC.sy;
-  console.log(x);
+
   for (let i = 0; i < npcPerRow; i++) {
     NPC.enteties.push({ x, y, color: "#922783ff", active: true, width: NPC.width, height: NPC.height });
     x += NPC.width + NPC.padding;
