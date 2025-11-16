@@ -12,6 +12,9 @@ let currentState = STATES.IDLE;
 
 let secondsLeftOfTimer = 5;
 
+let currentMenuCooldown = 10;
+let menuCooldown = 0;
+
 let currentScore = 0;
 let highScore = 0;
 
@@ -83,7 +86,7 @@ window.addEventListener("keydown", function (e) {
 
 window.addEventListener("keyup", function (e) {
   controllKeys[e.key] = false;
-})
+});
 
 
 //#endregion
@@ -103,7 +106,9 @@ function update(time) {
     updateMenu(time);
   } else if (currentState === STATES.PLAY) {
     updateGame(time);
-  } 
+  } else if (currentState === STATES.HIGHSCORE){
+    updateHighScoreMenu();
+  }
 
   draw();
 
@@ -112,7 +117,6 @@ function update(time) {
   } else {
     requestAnimationFrame(update);
   }
-  
 }
 
 function draw() {
@@ -143,8 +147,10 @@ init(); // Starts the game
 //#region Game functions
 
 function updateMenu(dt) {
+  menuCooldown --;
 
-  if (controllKeys[" "]) {
+  if (controllKeys[" "] && menuCooldown <= 0) {
+    menuCooldown = currentMenuCooldown;
     MENU.buttons[MENU.currentIndex].action();
   }
 
@@ -158,6 +164,15 @@ function updateMenu(dt) {
   MENU.currentIndex = clamp(MENU.currentIndex, 0, MENU.buttons.length - 1);
 
 
+}
+
+function updateHighScoreMenu() {
+  menuCooldown--;
+
+  if (controllKeys[" "] && menuCooldown <= 0) {
+    menuCooldown = currentMenuCooldown;
+    currentState = STATES.MENU;
+  }
 }
 
 function drawMenu() {
@@ -205,11 +220,11 @@ function drawHighScore(){
   brush.fillStyle = "rgba(170, 46, 81, 1)";
 
   brush.font = "bold 50px serif";
-  brush.fillText("CURRENT", scene.width/2, 150);
-  brush.fillText("HIGHSCORE:", scene.width/2, 150 + 50 + 10);
+  brush.fillText("CURRENT", scene.width/2, 100);
+  brush.fillText("HIGHSCORE:", scene.width/2, 100 + 50 + 10);
 
   brush.font = "50px serif";
-  brush.fillText(highScore + " points", scene.width/2, 200 + 50 + 20);
+  brush.fillText(highScore + " points", scene.width/2, 150 + 50 + 20);
 
   brush.font = "bold 30px serif";
   brush.fillText("> Return to main menu <", scene.width/2, scene.height - 50);
@@ -281,7 +296,7 @@ function isGameOver() {
 }
 
 function drawGameOver(){
-  brush.fillStyle = "white";
+  brush.fillStyle = "rgba(170, 46, 81, 1)";
   brush.textAlign = "center";
   brush.font = "80px Times New Roman";
   brush.fillText("GAME OVER", scene.width/2, 200);
@@ -362,7 +377,7 @@ function updateProjectiles() {
 }
 
 function drawGameState() {
-  brush.fillStyle = "white";
+  brush.fillStyle = "rgba(170, 46, 81, 1)";
   brush.font = "20px serif";
   brush.textAlign = "left";
   brush.fillText("Score: " + currentScore, 10, 30);
