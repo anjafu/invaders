@@ -13,6 +13,7 @@ let currentState = STATES.IDLE;
 let secondsLeftOfTimer = 5;
 
 let currentScore = 0;
+let highScore = 0;
 
 // ------
 
@@ -245,6 +246,9 @@ function isGameOver() {
   for (let invader of NPC.enteties) {
     if (invader.active) {
       if (invader.y+invader.height >= ship.y) {
+        if (currentScore > highScore) {
+          highScore = currentScore;
+        }
         return true;
       }
     }
@@ -337,6 +341,9 @@ function drawGameState() {
   brush.font = "20px serif";
   brush.textAlign = "left";
   brush.fillText("Score: " + currentScore, 10, 30);
+
+  brush.textAlign = "right";
+  brush.fillText("Current highscore: " + highScore, scene.width - 10, 30);
 
 
   brush.fillStyle = "#d4366bff";
