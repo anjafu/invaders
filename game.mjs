@@ -12,6 +12,8 @@ let currentState = STATES.IDLE;
 
 let secondsLeftOfTimer = 5;
 
+let currentScore = 0;
+
 // ------
 
 const MENU = {
@@ -50,7 +52,7 @@ const NPC = {
   height: 20,
   padding: 20,
   sx: 50,
-  sy: 20,
+  sy: 40,
   speed: 1,
   direction: 1,
   enteties: []
@@ -228,6 +230,7 @@ function updateInvaders() {
 
       if (isShot(invader)) {
         invader.active = false;
+        currentScore += 10;
       }
 
     }
@@ -330,6 +333,11 @@ function updateProjectiles() {
 }
 
 function drawGameState() {
+  brush.fillStyle = "white";
+  brush.font = "20px serif";
+  brush.textAlign = "left";
+  brush.fillText("Score: " + currentScore, 10, 30);
+
 
   brush.fillStyle = "#d4366bff";
   brush.fillRect(ship.x, ship.y, ship.width, ship.height);
@@ -353,6 +361,7 @@ function drawGameState() {
 function startPlay() {
   currentState = STATES.PLAY;
   drawNewGame();
+  currentScore = 0;
 }
 
 function showHigScores() {
