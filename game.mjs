@@ -59,6 +59,7 @@ const NPC = {
   sy: 40,
   speed: 1,
   direction: 1,
+  colors: ["blue", "purple", "red", "orange"],
   enteties: []
 }
 
@@ -200,16 +201,20 @@ function drawNewGame(){
   ship.x = (scene.width * 0.5) - 25;
   ship.velocityX = 0;
 
-  NPC.enteties = [];
+  movmentSteps = maxMovmentSteps; 
 
-  movmentSteps = maxMovmentSteps;
+  NPC.enteties = [];
 
   let x = NPC.sx;
   let y = NPC.sy;
 
-  for (let i = 0; i < npcPerRow; i++) {
-    NPC.enteties.push({ x, y, color: "#922783ff", active: true, width: NPC.width, height: NPC.height });
-    x += NPC.width + NPC.padding;
+  for (let entitiyColor of NPC.colors) {
+    for (let i = 0; i < npcPerRow; i++) {
+      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height });
+      x += NPC.width + NPC.padding;
+    }
+    x = NPC.sx;
+    y += NPC.padding * 1.5;
   }
 
   NPC.speed = 1;
@@ -259,7 +264,7 @@ function updateInvaders() {
 
   let tx = NPC.speed * NPC.direction;
 
-  for (let i = 0; i < npcPerRow; i++) {
+  for (let i = 0; i < NPC.enteties.length; i++) {
     let invader = NPC.enteties[i];
 
     if (invader.active) {
@@ -396,7 +401,7 @@ function drawGameState() {
     }
   }
 
-  for (let i = 0; i < npcPerRow; i++) {
+  for (let i = 0; i < NPC.enteties.length; i++) {
     let invader = NPC.enteties[i];
     if (invader.active) {
       brush.fillStyle = invader.color;
