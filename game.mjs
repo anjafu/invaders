@@ -1,6 +1,6 @@
 //#region CONSTANTS ------------------------------------------------------------------
 const FPS = 1000 / 60;
-const STATES = { MENU: 1, PLAY: 2, GAMEOVER: 3 }
+const STATES = { MENU: 1, PLAY: 2, GAMEOVER: 3, HIGHSCORE: 4}
 
 //#endregion
 
@@ -21,7 +21,7 @@ const MENU = {
   currentIndex: 0,
   buttons: [
     { text: "Play", action: startPlay },
-    { text: "High Scores", action: showHigScores }
+    { text: "High Scores", action: showHighScores }
   ]
 }
 
@@ -118,13 +118,21 @@ function update(time) {
 function draw() {
   clearScreen();
 
-  if (currentState === STATES.MENU) {
-    drawMenu();
-  } else if (currentState === STATES.PLAY) {
-    drawGameState();
-  } else if (currentState === STATES.GAMEOVER){
-    drawGameOver();
+   switch(currentState){
+    case STATES.MENU:
+      drawMenu();
+      break;
+    case STATES.PLAY:
+      drawGameState();
+      break;
+    case STATES.GAMEOVER:
+      drawGameOver();
+      break;
+    case STATES.HIGHSCORE:
+      drawHighScore();
+      break;
   }
+
 }
 
 init(); // Starts the game
@@ -190,6 +198,21 @@ function drawNewGame(){
   }
 
   NPC.speed = 1;
+}
+
+function drawHighScore(){
+  brush.textAlign = "center";
+  brush.fillStyle = "rgba(170, 46, 81, 1)";
+
+  brush.font = "bold 50px serif";
+  brush.fillText("CURRENT", scene.width/2, 150);
+  brush.fillText("HIGHSCORE:", scene.width/2, 150 + 50 + 10);
+
+  brush.font = "50px serif";
+  brush.fillText(highScore + " points", scene.width/2, 200 + 50 + 20);
+
+  brush.font = "bold 30px serif";
+  brush.fillText("> Return to main menu <", scene.width/2, scene.height - 50);
 }
 
 function updateGame(dt) {
@@ -369,12 +392,12 @@ function drawGameState() {
 
 function startPlay() {
   currentState = STATES.PLAY;
-  drawNewGame();
   currentScore = 0;
+  drawNewGame();
 }
 
-function showHigScores() {
-
+function showHighScores() {
+  currentState = STATES.HIGHSCORE;
 }
 
 //#endregion
