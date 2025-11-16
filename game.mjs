@@ -60,6 +60,7 @@ const NPC = {
   speed: 1,
   direction: 1,
   colors: ["blue", "purple", "red", "orange"],
+  pointValues: [40,30,20,10],
   enteties: []
 }
 
@@ -208,14 +209,27 @@ function drawNewGame(){
   let x = NPC.sx;
   let y = NPC.sy;
 
-  for (let entitiyColor of NPC.colors) {
+  for (let j = 0; j < NPC.colors.length; j++) {
+    let entitiyColor = NPC.colors[j];
+    let npcValue = NPC.pointValues[j]; 
+
     for (let i = 0; i < npcPerRow; i++) {
-      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height });
+      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height, value: npcValue});
       x += NPC.width + NPC.padding;
     }
     x = NPC.sx;
     y += NPC.padding * 1.5;
   }
+
+ /*
+  for (let entitiyColor of NPC.colors) {
+    for (let i = 0; i < npcPerRow; i++) {
+      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height});
+      x += NPC.width + NPC.padding;
+    }
+    x = NPC.sx;
+    y += NPC.padding * 1.5;
+  }*/
 
   NPC.speed = 1;
 }
@@ -274,7 +288,7 @@ function updateInvaders() {
 
       if (isShot(invader)) {
         invader.active = false;
-        currentScore += 10;
+        currentScore += invader.value;
       }
 
     }
