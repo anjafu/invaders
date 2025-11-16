@@ -97,7 +97,7 @@ window.addEventListener("keyup", function (e) {
 //#region Game engine ----------------------------------------------------------------
 
 function init() {
-  drawNewGame();
+  drawNewWave();
   currentState = STATES.MENU;
   update();
 }
@@ -198,11 +198,13 @@ function drawMenu() {
   }
 }
 
-function drawNewGame(){
+function drawNewWave(){
   ship.x = (scene.width * 0.5) - 25;
   ship.velocityX = 0;
 
   movmentSteps = maxMovmentSteps; 
+
+  projectiles = [];
 
   NPC.enteties = [];
 
@@ -220,16 +222,6 @@ function drawNewGame(){
     x = NPC.sx;
     y += NPC.padding * 1.5;
   }
-
- /*
-  for (let entitiyColor of NPC.colors) {
-    for (let i = 0; i < npcPerRow; i++) {
-      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height});
-      x += NPC.width + NPC.padding;
-    }
-    x = NPC.sx;
-    y += NPC.padding * 1.5;
-  }*/
 
   NPC.speed = 1;
 }
@@ -255,7 +247,7 @@ function updateGame(dt) {
   updateInvaders();
 
   if(checkInvaderStatus()){
-    drawNewGame();
+    drawNewWave();
   }
 
   if (isGameOver()) {
@@ -427,7 +419,7 @@ function drawGameState() {
 function startPlay() {
   currentState = STATES.PLAY;
   currentScore = 0;
-  drawNewGame();
+  drawNewWave();
 }
 
 function showHighScores() {
