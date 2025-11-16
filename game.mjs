@@ -59,7 +59,7 @@ const NPC = {
   sy: 40,
   speed: 1,
   direction: 1,
-  colors: ["blue", "purple", "red", "orange"],
+  colors: ["#290324ff", "#54174cff", "#972387ff", "#d038bcff"],
   pointValues: [40,30,20,10],
   enteties: []
 }
