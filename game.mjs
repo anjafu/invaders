@@ -264,7 +264,9 @@ function drawGameOver(){
   brush.fillText("GAME OVER", scene.width/2, 200);
 
   brush.font = "30px Times New Roman";
-  brush.fillText("Returning to main menu in: " + secondsLeftOfTimer + "s", scene.width/2, 240);
+  brush.fillText("Your score: " + currentScore, scene.width/2, 250);
+  brush.fillText("Current highscore: " + highScore, scene.width/2, 280);
+  brush.fillText("Returning to main menu in: " + secondsLeftOfTimer + "s", scene.width/2, 340);
 }
 
 //function that counts the time
