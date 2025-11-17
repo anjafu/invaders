@@ -8,9 +8,13 @@ const STATES = { MENU: 1, PLAY: 2, GAMEOVER: 3, HIGHSCORE: 4}
 const scene = document.getElementById("scene");
 const brush = getBrush();
 
-let currentState = STATES.IDLE;
+const RIGHT_BORDER = scene.width;
+const BOTTOM_BORDER = scene.height;
+const CENTER = RIGHT_BORDER / 2;
 
-let secondsLeftOfTimer = 5;
+let currentState = STATES.MENU;
+
+let countDownTimer = 5;
 
 let currentMenuCooldown = 10;
 let menuCooldown = 0;
@@ -31,8 +35,9 @@ const MENU = {
 // ------
 
 const ship = {
-  x: (scene.width * 0.5) - 25,
-  y: scene.height - 30,
+  y: BOTTOM_BORDER - 30,
+  sx: CENTER - 25, //25 = width/2 to make ship spawn in middle of scene
+  x: CENTER - 25,
   width: 50,
   height: 20,
   velocityX: 0,
@@ -42,12 +47,15 @@ const ship = {
 
 // ------
 
-const projectieWidth = 3;
-const projectileHeight = 5;
-const projectileSpeed = 2;
-const projectileCooldown = 40;
+const projectile = {
+  width: 3,
+  height: 5,
+  speed: 2,
+  coolDown: 40,
+  bullets: []
+}
+
 let cooldown = 0;
-let projectiles = [];
 
 // ------
 
@@ -61,19 +69,16 @@ const NPC = {
   direction: 1,
   colors: ["#290324ff", "#54174cff", "#972387ff", "#d038bcff"],
   pointValues: [40,30,20,10],
-  enteties: []
+  entities: []
 }
 
-const npcPerRow = Math.floor((scene.width - NPC.height) / (NPC.width + NPC.height));
-
 // ------
 
-// Movment back and forth of NPC´s are govered by counting up to a level
-const maxMovmentSteps = 50;
-let movmentSteps = maxMovmentSteps;
+// Movement back and forth of NPC´s are govered by counting up to a level
+const maxMovementSteps = 50;
+let movementSteps = maxMovementSteps;
 
 // ------
-// The following is a simple way of 
 let controllKeys = {
   ArrowDown: false,
   ArrowUp: false,
@@ -97,7 +102,7 @@ window.addEventListener("keyup", function (e) {
 //#region Game engine ----------------------------------------------------------------
 
 function init() {
-  drawNewWave();
+  drawNewGame();
   currentState = STATES.MENU;
   update();
 }
@@ -109,13 +114,15 @@ function update(time) {
   } else if (currentState === STATES.PLAY) {
     updateGame(time);
   } else if (currentState === STATES.HIGHSCORE){
-    updateHighScoreMenu();
+    checkHighscoreMenu();
   }
 
   draw();
 
+  //deciding how fast to update the program
   if(currentState === STATES.GAMEOVER){
-    setTimeout(() => {requestAnimationFrame(update); timeCounter();}, 1000);
+    //only updates the game every second -> makes it possible to create a countdown timer
+    setTimeout(() => {requestAnimationFrame(update); updateCountDownTimer();}, 1000);
   } else {
     requestAnimationFrame(update);
   }
@@ -151,6 +158,8 @@ init(); // Starts the game
 function updateMenu(dt) {
   menuCooldown --;
 
+  //puts timer on button so you cant spam it (causing you to go back and forward without control, if next
+  //state has a button as well)
   if (controllKeys[" "] && menuCooldown <= 0) {
     menuCooldown = currentMenuCooldown;
     MENU.buttons[MENU.currentIndex].action();
@@ -164,11 +173,24 @@ function updateMenu(dt) {
   }
 
   MENU.currentIndex = clamp(MENU.currentIndex, 0, MENU.buttons.length - 1);
-
-
 }
 
-function updateHighScoreMenu() {
+function updateGame(dt) {
+  updateShip();
+  updateProjectiles();
+  updateInvaders();
+
+  if(allInvadersInactive()){
+    drawNewGame();
+  }
+
+  if (isGameOver()) {
+    currentState = STATES.GAMEOVER;
+    checkHighscore();
+  }
+}
+
+function checkHighscoreMenu() {
   menuCooldown--;
 
   if (controllKeys[" "] && menuCooldown <= 0) {
@@ -192,38 +214,22 @@ function drawMenu() {
 
     brush.textAlign = "center";
     brush.fillStyle = "rgba(170, 46, 81, 1)";
-    brush.fillText(text, scene.width/2, sy);
+    brush.fillText(text, CENTER, sy);
     sy += 50;
 
   }
 }
 
-function drawNewWave(){
-  ship.x = (scene.width * 0.5) - 25;
+
+function drawNewGame(){
+  //recentering the ship in case new game/new wave
+  ship.x = ship.sx;
   ship.velocityX = 0;
 
-  movmentSteps = maxMovmentSteps; 
+  //emptying the projectiles in case new wave in middle of game so invaders cant spawn inactive
+  projectile.bullets = [];
 
-  projectiles = [];
-
-  NPC.enteties = [];
-
-  let x = NPC.sx;
-  let y = NPC.sy;
-
-  for (let j = 0; j < NPC.colors.length; j++) {
-    let entitiyColor = NPC.colors[j];
-    let npcValue = NPC.pointValues[j]; 
-
-    for (let i = 0; i < npcPerRow; i++) {
-      NPC.enteties.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height, value: npcValue});
-      x += NPC.width + NPC.padding;
-    }
-    x = NPC.sx;
-    y += NPC.padding * 1.5;
-  }
-
-  NPC.speed = 1;
+  drawNewWave();
 }
 
 function drawHighScore(){
@@ -231,47 +237,74 @@ function drawHighScore(){
   brush.fillStyle = "rgba(170, 46, 81, 1)";
 
   brush.font = "bold 50px serif";
-  brush.fillText("CURRENT", scene.width/2, 100);
-  brush.fillText("HIGHSCORE:", scene.width/2, 100 + 50 + 10);
+  brush.fillText("CURRENT", CENTER, 100);
+  brush.fillText("HIGHSCORE:", CENTER, 100 + 50 + 10);
 
   brush.font = "50px serif";
-  brush.fillText(highScore + " points", scene.width/2, 150 + 50 + 20);
+  brush.fillText(highScore + " points", CENTER, 150 + 50 + 20);
 
   brush.font = "bold 30px serif";
-  brush.fillText("> Return to main menu <", scene.width/2, scene.height - 50);
+  brush.fillText("> Return to main menu <", CENTER, BOTTOM_BORDER - 50);
 }
 
-function updateGame(dt) {
-  updateShip();
-  updateProjectiles();
-  updateInvaders();
+function drawGameOver(){
+  brush.fillStyle = "rgba(170, 46, 81, 1)";
+  brush.textAlign = "center";
+  brush.font = "80px serif";
+  brush.fillText("GAME OVER", CENTER, 200);
 
-  if(checkInvaderStatus()){
-    drawNewWave();
+  brush.font = "30px serif";
+  brush.fillText("Your score: " + currentScore, CENTER, 250);
+  brush.fillText("Current highscore: " + highScore, CENTER, 280);
+  brush.fillText("Returning to main menu in: " + countDownTimer + "s", CENTER, 340);
+}
+
+function drawNewWave(){
+  movementSteps = maxMovementSteps; 
+
+  //removing all invaders in case game over -> resets the wave completely
+  NPC.entities = [];
+
+  let x = NPC.sx;
+  let y = NPC.sy;
+
+  const npcPerRow = Math.floor((RIGHT_BORDER - NPC.height) / (NPC.width + NPC.height));
+
+  //adding the invaders to the NPC entities list 
+  for (let j = 0; j < NPC.colors.length; j++) {
+    //each row of invader has unique color and values
+    let entitiyColor = NPC.colors[j];
+    let npcValue = NPC.pointValues[j]; 
+
+    for (let i = 0; i < npcPerRow; i++) {
+      NPC.entities.push({ x, y, color: entitiyColor, active: true, width: NPC.width, height: NPC.height, value: npcValue});
+      x += NPC.width + NPC.padding;
+    }
+
+    x = NPC.sx;
+    y += NPC.padding * 1.5; //adds vertical spacing
   }
 
-  if (isGameOver()) {
-    currentState = STATES.GAMEOVER;
-  }
+  NPC.speed = 1;
 }
 
 function updateInvaders() {
 
   let ty = 0;
 
-  if (NPC.direction == 1 && movmentSteps >= maxMovmentSteps * 2) {
-    movmentSteps = 0;
+  if (NPC.direction == 1 && movementSteps >= maxMovementSteps * 2) {
+    movementSteps = 0;
     NPC.direction *= -1
-  } else if (NPC.direction == -1 && movmentSteps >= maxMovmentSteps * 2) {
-    movmentSteps = 0;
+  } else if (NPC.direction == -1 && movementSteps >= maxMovementSteps * 2) {
+    movementSteps = 0;
     NPC.direction *= -1;
     ty += NPC.height;
   }
 
   let tx = NPC.speed * NPC.direction;
 
-  for (let i = 0; i < NPC.enteties.length; i++) {
-    let invader = NPC.enteties[i];
+  for (let i = 0; i < NPC.entities.length; i++) {
+    let invader = NPC.entities[i];
 
     if (invader.active) {
 
@@ -287,17 +320,15 @@ function updateInvaders() {
 
   }
 
-  movmentSteps++;
-
+  movementSteps++;
 }
 
+//checks if game is over
 function isGameOver() {
-  for (let invader of NPC.enteties) {
+  for (let invader of NPC.entities) {
     if (invader.active) {
+      //game over if active invader reaches ships level
       if (invader.y+invader.height >= ship.y) {
-        if (currentScore > highScore) {
-          highScore = currentScore;
-        }
         return true;
       }
     }
@@ -306,31 +337,16 @@ function isGameOver() {
   return false;
 }
 
-function drawGameOver(){
-  brush.fillStyle = "rgba(170, 46, 81, 1)";
-  brush.textAlign = "center";
-  brush.font = "80px Times New Roman";
-  brush.fillText("GAME OVER", scene.width/2, 200);
-
-  brush.font = "30px Times New Roman";
-  brush.fillText("Your score: " + currentScore, scene.width/2, 250);
-  brush.fillText("Current highscore: " + highScore, scene.width/2, 280);
-  brush.fillText("Returning to main menu in: " + secondsLeftOfTimer + "s", scene.width/2, 340);
+//checks highscore and if it need to be updated
+function checkHighscore(){
+  if (currentScore > highScore) {
+          highScore = currentScore;
+    }
 }
 
-//function that counts the time
-function timeCounter(){
-  secondsLeftOfTimer --;
-  //console.log(secondsLeftOfTimer);
-
-  if (secondsLeftOfTimer <= 0){
-    currentState = STATES.MENU;
-    secondsLeftOfTimer = 5;
-  }
-}
-
-function checkInvaderStatus(){
-  for (let invader of NPC.enteties) {
+//checks if all invaders are inactive or not
+function allInvadersInactive(){
+  for (let invader of NPC.entities) {
     if (invader.active) {
       return false;
     }
@@ -342,10 +358,10 @@ function checkInvaderStatus(){
 
 function isShot(target) {
 
-  for (let i = 0; i < projectiles.length; i++) {
-    let projectile = projectiles[i];
-    if (overlaps(target.x, target.y, target.width, target.height, projectile.x, projectile.y, projectile.width, projectile.height)) {
-      projectile.active = false;
+  for (let i = 0; i < projectile.bullets.length; i++) {
+    let bullet = projectile.bullets[i];
+    if (overlaps(target.x, target.y, target.width, target.height, bullet.x, bullet.y, bullet.width, bullet.height)) {
+      bullet.active = false;
       return true;
     }
   }
@@ -363,28 +379,28 @@ function updateShip() {
   ship.velocityX = clamp(ship.velocityX, ship.maxVelocity * -1, ship.maxVelocity);
 
   let tmpX = ship.x + ship.velocityX;
-  tmpX = clamp(tmpX, 0, scene.width - ship.width);
+  tmpX = clamp(tmpX, 0, RIGHT_BORDER - ship.width);
 
   ship.x = tmpX;
 
   cooldown--;
 
   if (controllKeys[" "] && cooldown <= 0) {
-    projectiles.push({ x: ship.x + ship.width * 0.5, y: ship.y, dir: -1, active: true, width: projectieWidth, height: projectileHeight });
-    cooldown = projectileCooldown;
+    projectile.bullets.push({ x: ship.x + ship.width * 0.5, y: ship.y, dir: -1, active: true, width: projectile.width, height: projectile.height, speed: projectile.speed});
+    cooldown = projectile.coolDown;
   }
 }
 
 function updateProjectiles() {
-  let activeProjectiles = []
-  for (let i = 0; i < projectiles.length; i++) {
-    let projectile = projectiles[i]
-    projectile.y += projectileSpeed * projectile.dir;
-    if (projectile.y + projectileHeight > 0 && projectile.active) {
-      activeProjectiles.push(projectile);
+  let activeProjectiles = [];
+  for (let i = 0; i < projectile.bullets.length; i++) {
+    let bullet = projectile.bullets[i];
+    bullet.y += bullet.speed * bullet.dir;
+    if (bullet.y + bullet.height > 0 && bullet.active) {
+      activeProjectiles.push(bullet);
     }
   }
-  projectiles = activeProjectiles;
+  projectile.bullets = activeProjectiles;
 }
 
 function drawGameState() {
@@ -394,21 +410,21 @@ function drawGameState() {
   brush.fillText("Score: " + currentScore, 10, 30);
 
   brush.textAlign = "right";
-  brush.fillText("Current highscore: " + highScore, scene.width - 10, 30);
+  brush.fillText("Current highscore: " + highScore, RIGHT_BORDER - 10, 30);
 
 
   brush.fillStyle = "#d4366bff";
   brush.fillRect(ship.x, ship.y, ship.width, ship.height);
 
-  for (let projectile of projectiles) {
-    if (projectile.active) {
+  for (let bullet of projectile.bullets) {
+    if (bullet.active) {
       brush.fillStyle = "white";
-      brush.fillRect(projectile.x, projectile.y, projectieWidth, projectileHeight);
+      brush.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
     }
   }
 
-  for (let i = 0; i < NPC.enteties.length; i++) {
-    let invader = NPC.enteties[i];
+  for (let i = 0; i < NPC.entities.length; i++) {
+    let invader = NPC.entities[i];
     if (invader.active) {
       brush.fillStyle = invader.color;
       brush.fillRect(invader.x, invader.y, NPC.width, NPC.height);
@@ -419,7 +435,7 @@ function drawGameState() {
 function startPlay() {
   currentState = STATES.PLAY;
   currentScore = 0;
-  drawNewWave();
+  drawNewGame();
 }
 
 function showHighScores() {
@@ -436,7 +452,7 @@ function getBrush() {
 
 function clearScreen() {
   if (brush) {
-    brush.clearRect(0, 0, scene.width, scene.height);
+    brush.clearRect(0, 0, RIGHT_BORDER, BOTTOM_BORDER);
   }
 }
 
@@ -455,5 +471,16 @@ function overlaps(x1, y1, w1, h1, x2, y2, w2, h2) {
   }
 
   return true;
+}
+
+//function that counts the time
+function updateCountDownTimer(){
+  countDownTimer --;
+
+  if (countDownTimer <= 0){
+    currentState = STATES.MENU;
+    //resets the countdown timer for next time
+    countDownTimer = 5;
+  }
 }
 //#endregion
