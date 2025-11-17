@@ -42,7 +42,8 @@ const ship = {
   height: 20,
   velocityX: 0,
   velocityY: 0,
-  maxVelocity: 3
+  maxVelocity: 3,
+  color: "#d4366bff"
 }
 
 // ------
@@ -52,7 +53,8 @@ const projectile = {
   height: 5,
   speed: 2,
   coolDown: 40,
-  bullets: []
+  bullets: [],
+  color: "white"
 }
 
 let cooldown = 0;
@@ -155,6 +157,16 @@ init(); // Starts the game
 
 //#region Game functions
 
+function startPlay() {
+  currentState = STATES.PLAY;
+  currentScore = 0;
+  drawNewGame();
+}
+
+function showHighScores() {
+  currentState = STATES.HIGHSCORE;
+}
+
 function updateMenu(dt) {
   menuCooldown --;
 
@@ -220,16 +232,33 @@ function drawMenu() {
   }
 }
 
+function drawGameState() {
+  brush.fillStyle = "rgba(170, 46, 81, 1)";
+  brush.font = "20px serif";
+  brush.textAlign = "left";
+  brush.fillText("Score: " + currentScore, 10, 30);
 
-function drawNewGame(){
-  //recentering the ship in case new game/new wave
-  ship.x = ship.sx;
-  ship.velocityX = 0;
+  brush.textAlign = "right";
+  brush.fillText("Current highscore: " + highScore, RIGHT_BORDER - 10, 30);
 
-  //emptying the projectiles in case new wave in middle of game so invaders cant spawn inactive
-  projectile.bullets = [];
 
-  drawNewWave();
+  brush.fillStyle = ship.color;
+  brush.fillRect(ship.x, ship.y, ship.width, ship.height);
+
+  for (let bullet of projectile.bullets) {
+    if (bullet.active) {
+      brush.fillStyle = bullet.color;
+      brush.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    }
+  }
+
+  for (let i = 0; i < NPC.entities.length; i++) {
+    let invader = NPC.entities[i];
+    if (invader.active) {
+      brush.fillStyle = invader.color;
+      brush.fillRect(invader.x, invader.y, NPC.width, NPC.height);
+    }
+  }
 }
 
 function drawHighScore(){
@@ -257,6 +286,17 @@ function drawGameOver(){
   brush.fillText("Your score: " + currentScore, CENTER, 250);
   brush.fillText("Current highscore: " + highScore, CENTER, 280);
   brush.fillText("Returning to main menu in: " + countDownTimer + "s", CENTER, 340);
+}
+
+function drawNewGame(){
+  //recentering the ship in case new game/new wave
+  ship.x = ship.sx;
+  ship.velocityX = 0;
+
+  //emptying the projectiles in case new wave in middle of game so invaders cant spawn inactive
+  projectile.bullets = [];
+
+  drawNewWave();
 }
 
 function drawNewWave(){
@@ -386,7 +426,7 @@ function updateShip() {
   cooldown--;
 
   if (controllKeys[" "] && cooldown <= 0) {
-    projectile.bullets.push({ x: ship.x + ship.width * 0.5, y: ship.y, dir: -1, active: true, width: projectile.width, height: projectile.height, speed: projectile.speed});
+    projectile.bullets.push({ x: ship.x + ship.width * 0.5, y: ship.y, dir: -1, active: true, width: projectile.width, height: projectile.height, speed: projectile.speed, color: projectile.color});
     cooldown = projectile.coolDown;
   }
 }
@@ -401,45 +441,6 @@ function updateProjectiles() {
     }
   }
   projectile.bullets = activeProjectiles;
-}
-
-function drawGameState() {
-  brush.fillStyle = "rgba(170, 46, 81, 1)";
-  brush.font = "20px serif";
-  brush.textAlign = "left";
-  brush.fillText("Score: " + currentScore, 10, 30);
-
-  brush.textAlign = "right";
-  brush.fillText("Current highscore: " + highScore, RIGHT_BORDER - 10, 30);
-
-
-  brush.fillStyle = "#d4366bff";
-  brush.fillRect(ship.x, ship.y, ship.width, ship.height);
-
-  for (let bullet of projectile.bullets) {
-    if (bullet.active) {
-      brush.fillStyle = "white";
-      brush.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    }
-  }
-
-  for (let i = 0; i < NPC.entities.length; i++) {
-    let invader = NPC.entities[i];
-    if (invader.active) {
-      brush.fillStyle = invader.color;
-      brush.fillRect(invader.x, invader.y, NPC.width, NPC.height);
-    }
-  }
-}
-
-function startPlay() {
-  currentState = STATES.PLAY;
-  currentScore = 0;
-  drawNewGame();
-}
-
-function showHighScores() {
-  currentState = STATES.HIGHSCORE;
 }
 
 //#endregion
